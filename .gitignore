@@ -1,0 +1,5 @@
+.vscode
+*.py~
+.coverage
+__pycache__
+.vs
