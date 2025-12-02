@@ -12,3 +12,6 @@
 
 Day 1: Wow part 2 was pretty hard for a day 1 problem, lots (relatively) of 
 special cases to work through.
+
+Day 2, Part 1: I adapted a palindrome generator I developed in Project Euler 
+(problem 36).
