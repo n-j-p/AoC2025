@@ -4,7 +4,7 @@ sample_data = '11-22,95-115,998-1012,1188511880-1188511890,222220-222224,'+\
 
 import itertools as it
 
-# Adapted from PE33.py
+# Adapted from palindrome_generator from PE36.py
 def invalid_generator():
     ndigits = 2
     while True:
@@ -27,8 +27,6 @@ def part1(data):
     LR =  [[int(x) for x in r.split('-')] for r in ranges]
     LRs = sorted(LR, key = lambda x: x[1])
 
-    min_i = 0
-
     all_invalids = list(it.takewhile(lambda x: x < LRs[-1][1],
                                      invalid_generator()))
 
@@ -40,8 +38,6 @@ def part1(data):
                 break
             if x >= r[0]:
                 invalid_IDs[tuple(r)].append(x)
-
-
 
     return invalid_IDs
 
