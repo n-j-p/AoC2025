@@ -13,5 +13,10 @@
 Day 1: Wow part 2 was pretty hard for a day 1 problem, lots (relatively) of 
 special cases to work through.
 
-Day 2, Part 1: I adapted a palindrome generator I developed in Project Euler 
+Day 2, Part 1: I adapted a palindrome generator I developed for Project Euler 
 (problem 36).
+
+Day 2, Part 2: Speaking of Project Euler I was tempted to bring out a meta-
+generator I developed that interleaves an arbitrary number of pre-sorted 
+generators into one big sorted generator, but hey it's only day 2 and it's
+not really needed here.
