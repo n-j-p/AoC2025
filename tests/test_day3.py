@@ -7,7 +7,7 @@ def test_part2():
     from day3 import max_joltage2
     ans = [987654321111,
            811111111119,
-           434234324278,
+           434234234278,
            888911112111]
 
     for i,ns in enumerate(sample_input):
