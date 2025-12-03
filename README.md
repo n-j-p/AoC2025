@@ -21,5 +21,6 @@ generator I developed that interleaves an arbitrary number of pre-sorted
 generators into one big sorted generator, but hey it's only day 2 and it's
 not really needed here.
 
-Day 3: part 1 was easy enough with a BF approach. I'm not sure algorithm mhy
-part 2 solution uses. Seems closest to a depth-first tree traversal.
+Day 3: part 1 was easy enough with a BF approach. I'm not sure what the 
+algorithm is called that my part 2 solution uses. It seems closest to a 
+depth-first tree traversal.

@@ -16,9 +16,13 @@ def max_joltage(data):
     return mxs
 
 r'''
-Choose largest remaining number, and pick the first (leftmost occurrence).
-Then repeat on the restricted sequence to the right of the latest choice.
-When there are not enough digits left to complete k choices, backtrack.
+Part 2 algorithm outline:
+If there is a 9, choose that. In fact, choose the left-most 9 since that will
+always give a larger joltage than anything to the right. Then we search for
+the next 9 (to the right of our first digit). Failing that search for 8, 7, ...
+If there were infinite digits that would be the complete algorithm. However, if
+there are not enough digits remaining to the right of our latest choices, we 
+need to backtrack.
 '''
 def max_joltage2(n, k=3):
     row = [int(x) for x in str(n)]
@@ -26,22 +30,24 @@ def max_joltage2(n, k=3):
         return n, list(range(len(row)))
     elif k > len(row):
         raise Exception("Not possible!")
-    N = 9
     # ixes holds digit indices for the solution. We start off with a guard:
     ixes = [-1]
+
+    N = 9
     while len(ixes) < k+1:
         try:
             # Look for N to the right of the solution so far (index 0 to begin
             # with):
             i = row.index(N, ixes[-1]+1)
         except ValueError: # Can't find N in the remaining digits
-            # decrement N and start the search again
+            # If we can,
             if N > 1:
+                # decrement N and start the search again
                 N -= 1
-            else: # i.e. N == 1
-                # There are no zeros in the inputs, so we have reached the end 
-                # of the search (unsuccesfully). Pop the last choice, and start 
-                # searching for that number minus one.
+            else: # here N == 1 so we can't decrement as 
+                # there are no zeros in the inputs. We have reached the end 
+                # of the search (unsuccessfully). Pop the last choice, and 
+                # start searching for that number minus one.
                 N = row[ixes.pop(-1)] - 1
             continue
         if len(ixes) == k:
@@ -49,22 +55,27 @@ def max_joltage2(n, k=3):
             # return
             ixes.append(i)
             break
+
+        # o.w.:
         # Calculate how many digits we still need to find:
-        num_left = k - len(ixes) + 1
+        num_digits_remaining = k - len(ixes) + 1
         # And how many digits are to the right of the latest choice:
         num_digits_to_right = len(row)-1-i
         # If there are not enough digits left, decrement N and start the
         # search again.
-        if num_left-1 > num_digits_to_right:
+        if num_digits_remaining-1 > num_digits_to_right:
             N -= 1
         else:
-            # OK, there are enough digits to the right to fulfil our search.
+            # OK, there are enough digits to the right to (potentially) fulfil 
+            # our search.
             # Add the latest digit to our solution, and start a new search
             # with N = 9 again
             ixes.append(i)
             N = 9
-    # We were successful:
+
+    # Yes! We were successful:
     ixes.pop(0) # Remove guard
+    # Return solution
     return int(''.join([str(row[i]) for i in ixes])), ixes
 
 def part1():
