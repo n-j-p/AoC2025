@@ -24,3 +24,5 @@ not really needed here.
 Day 3: part 1 was easy enough with a BF approach. I'm not sure what the 
 algorithm is called that my part 2 solution uses. It seems closest to a 
 depth-first tree traversal.
+
+Day 4: Pretty easy, I set up a Class.

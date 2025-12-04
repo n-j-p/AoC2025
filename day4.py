@@ -27,8 +27,9 @@ class Grid():
                 if self.plan[r][c] == '@':
                     yield (r,c)
     
-    def count_free(self):
+    def count_free(self, return_ixes=False):
         ct = 0
+        ixes = []
         for r,c in self.paper_index_generator():
             block = self.get_block(r,c)
             n = 0
@@ -39,8 +40,29 @@ class Grid():
                     break
             if n <= 4:
                 ct += 1
-        return ct
+                ixes.append((r,c))
+        if return_ixes:
+            return ct, ixes
+        else:
+            return ct
+    def update(self, ixes):
+        new_plan = [x for x in self.plan] # make a copy!
+        for r,c in ixes:
+            new_plan[r] = new_plan[r][:c] + '.' + new_plan[r][(c+1):]
+        self.plan = new_plan
+    def remove_all(self):
+        ct = 1
+        tot = 0
+        while ct > 0:
+            ct, ix = self.count_free(True)
+            tot += ct
+            #print(ct)
+            self.update(ix)
+        return tot
+
     
 if __name__ == '__main__':
     actual_data = open('c:/temp/day4_input.txt').read().split('\n')[:-1]
-    print(Grid(actual_data).count_free())
+    print(f'Part 1 answer is {Grid(actual_data).count_free()}')
+
+    print(f'Part 2 answer is {Grid(actual_data).remove_all()}')
