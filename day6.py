@@ -40,6 +40,29 @@ def part1(data):
         
         tot += ans
     return tot
+def part2(data):
+    ixes = get_col_indices(data)
+    split = [[row[x[0]+1:x[1]] for x in it.pairwise(ixes)] for row in data]
+    # print(split)
+
+    i = 0
+    # return(split, list(zip(*split)))
+
+    tot = 0
+    for col in zip(*split):
+        nstr = [''.join(y) for y in zip(*[list(x) for x in col[:-1]])]
+        # print(nstr)
+        ns = [int(n) for n in nstr]
+
+        if col[-1].strip() == '+':
+            ans = reduce(lambda x,y: x+y, ns)
+        elif col[-1].strip() == '*':
+            ans = reduce(lambda x,y: x*y, ns)
+        else:
+            raise Exception
+        
+        tot += ans
+    return tot
 if __name__ == '__main__':
 
     actual_data = open('c:/temp/day6_input.txt', 'r').read().split('\n')[:-1]

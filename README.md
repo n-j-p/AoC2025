@@ -26,3 +26,5 @@ algorithm is called that my part 2 solution uses. It seems closest to a
 depth-first tree traversal.
 
 Day 4: Pretty easy, I set up a Class.
+
+Day 6: Just zip it! Zip it good.
