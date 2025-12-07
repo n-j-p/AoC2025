@@ -24,36 +24,30 @@ def splitter(data, VERBOSE=False):
         beams = set(newbeams)
     return c
 
-import itertools as it
-import tqdm
 def quantum(data, VERBOSE=False):
     i = data[0].index('S')
     from collections import defaultdict
-    timelines = defaultdict(list)
-    timelines[i] = ['']
+    timelines = defaultdict(int)
+    timelines[i] = 1
 
 
 
-    for r in tqdm.tqdm(range(1, len(data))):
-        newtimelines = defaultdict(list)
+    for r in range(1, len(data)):
+        newtimelines = defaultdict(int)
         newrow = data[r]
         for i in timelines.keys():
             if newrow[i] == '^':
-                newtimelines[i-1] += [x + 'L' for x in timelines[i]]
-                newtimelines[i+1] += [x + 'R' for x in timelines[i]]
+                newtimelines[i-1] += timelines[i]#[x + 'L' for x in timelines[i]]
+                newtimelines[i+1] += timelines[i]#[x + 'R' for x in timelines[i]]
                 # raise NotImplementedError
             else:
-                newtimelines[i] += list(timelines[i])
+                newtimelines[i] += timelines[i]
         if VERBOSE: print(r, ':', newtimelines)
         timelines = dict(newtimelines)
 
-    c = 0
-
-    for x in it.chain.from_iterable(timelines.values()):
-        c += 1
-
-    return c
-
+    
+    return(sum(timelines.values()))
+    
 
 
 

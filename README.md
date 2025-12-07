@@ -28,3 +28,5 @@ depth-first tree traversal.
 Day 4: Pretty easy, I set up a Class.
 
 Day 6: Just zip it! Zip it good.
+
+Day 7: Of course, enumeration is better than generation.
