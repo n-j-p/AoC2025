@@ -20,7 +20,7 @@ def part1(data):
 def classify_pts(data):
     corners = [(int(x[0]), int(x[1])) for x in [y.split(",") for y in data]]
     pts = {pt: 'c' for pt in corners}
-    for x,y in it.pairwise(corners):
+    for x,y in it.pairwise(corners + [corners[0],]):
         print(x,y)
         if x[0] == y[0]: # vertical
             mn = min(x[1], y[1])
@@ -102,3 +102,195 @@ if __name__ == '__main__':
     pts = [(int(x[0]), int(x[1])) for x in [y.split(",") for y in actual_input]]
     print(actual_input)
     print(part1(actual_input))
+
+
+r'''
+
+Analysis.
+
+We have a series of points which are rectilinearlly connected, i.e. subsequent
+points share either the same x- or the same y-coordinate (with the other 
+different). Each point is set as a corner, and lines connecting each corner
+are either vertical or horizontal lines. All of these points are red or green 
+squares as per the problem description.
+
+Joining all the points gives us a closed curve and thus an interior and 
+exterior. All interior points are coloured green. Given two corners defining
+a rectangle we will have corresponding lines between four vertices of the 
+rectangle
+
+Now we can trace each line and the rectangle is OK (entirely on red or 
+green squares) so long as no part of the line lies in the exterior of the
+defined close curve.
+
+Wlog let's consider a horizontal line. 
+
+We hit an exterior point if: 
+
+1. the line passes an odd number (including one) of consecutive vertical points
+and then hits an empty square, e.g.:
+
+---.
+ I | E
+ >>>>>
+   |
+(I and E designate interior and exterior parts of the curve.)
+
+If we pass through two vertical lines, e.g.
+
+---. E
+   |.----
+ I ||
+ >>>>>>
+   || I
+   ..
+
+we are still in the interior. Passing through three verticals lands us in
+the exterior.
+
+However, if we don't break through to an empty square (i.e. the line we are 
+tracing ends on a vertical or corner square), we are still OK.
+
+2. we are leave a corner square and we hit an empty square that is in the 
+exterior, the rectangle is not OK. For this we classify corners as either
+external or internal corners:
+
+External:  Internal:
+
+---.        ---.   
+   | E         | I 
+ I |         E |   
+       
+A corner is external if the two empty squares on either side are outside
+the curve and internal if the two empties are inside squares.
+
+If we have a corner designated as one type, the next corner is then the 
+other type if the second corner is oriented like:
+
+------.
+      |  E/I
+ I/E  |
+      .-----
+
+and the same type if:
+      
+
+------.
+      |
+ I/E  | I/E
+    --.
+
+Thus starting with one corner and designating it either internal or external
+(not sure how to start this), we can go around the curve and designate
+each corner as either internal or external.
+
+If the line we are tracing leaves a corner and touches an empty space we
+can tell straight away if we are in the exterior or not.
+
+One complication is if we start the line tracing on a vertical wall:
+ -|||-
+  |X>>>
+  |||
+Is the empty square we first reach interior or exterior?
+
+
+'''
+
+# Let's start by designating corner types:
+
+def classify2(data):
+    pts = [(int(x[0]), int(x[1])) for x in [y.split(",") for y in data]]
+    z = classify_pts(data)
+    corner_types = {}
+    corner_types[pts[0]] = 'e' # assume to begin with
+    for c1, c2 in it.pairwise(pts + [pts[0],]):
+        print(c1,c2)
+        if c1[0] == c2[0]: # line connecting these corners is vertical
+            if (c1[0]-1, c1[1]) in z:
+                #
+                # --X c1
+                #   |
+                #   X c2
+                #
+                # or:
+                #
+                #   X c2
+                #   |
+                # --X c1
+                #
+                if (c2[0]-1, c2[1]) in z:
+                    corner_types[c2] = corner_types[c1]
+                else:
+                    corner_types[c2] = 'i' if corner_types[c1] == 'e' else 'e'
+            elif (c1[0]+1, c1[1]) in z:
+                if (c2[0]+1, c2[1]) in z:
+                    corner_types[c2] = corner_types[c1]
+                else:
+                    corner_types[c2] = 'i' if corner_types[c1] == 'e' else 'e'
+            else:
+                raise NotImplementedError('Unknown')
+        else: # line connecting the two corners is horizontal
+            if (c1[0], c1[1]-1) in z:
+                if (c2[0], c2[1]-1) in z:
+                    corner_types[c2] = corner_types[c1]
+                else:
+                    corner_types[c2] = 'i' if corner_types[c1] == 'e' else 'e'
+            elif (c1[0], c1[1]+1) in z:
+                if (c2[0], c2[1]+1) in z:
+                    corner_types[c2] = corner_types[c1]
+                else:
+                    corner_types[c2] = 'i' if corner_types[c1] == 'e' else 'e'
+            else:
+                raise NotImplementedError('unknown')
+    return z, pts, corner_types
+
+# The above seems to be correct, at least on the sample_input
+
+r'''
+
+The concern above is equally valid if we start in an empty square. Is it
+interior or exterior? However, in both cases we can trace the line in the
+other direction (i.e. always starting from a corner). Leaving the corner we 
+either are on a horizontal or another corner, which is OK, or an empty 
+square in which case we can check. What about:
+
+  E |
+---X>>?
+   ||
+   ..
+
+'''
+
+def trace_from_corner(p, q):
+    '''
+.---q
+|   |
+p---.
+
+Here we generate the two lines radiating from p
+    '''
+
+    px, py = p
+    qx, qy = q
+
+    # First do horizontal line:
+    if qx > px:
+        for x in range(px+1, qx+1):
+            yield ('h', x, py)
+    else:
+        for x in range(px-1,qx-1,-1):
+            yield ('h', x, py)
+
+    # Next vertical line:
+    if qy > py:
+        for y in range(py+1, qy+1):
+            yield ('v', px, y)
+    else:
+        for y in range(py-1, qy-1, -1):
+            yield ('v', px, y)
+
+
+
+
+
+
