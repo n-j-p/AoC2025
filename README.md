@@ -30,3 +30,6 @@ Day 4: Pretty easy, I set up a Class.
 Day 6: Just zip it! Zip it good.
 
 Day 7: Of course, enumeration is better than generation.
+
+Day 8: Without the correct data structure this one would be impossible. Either
+you know it or you don't. I solved [a similar problem](https://projecteuler.net/problem=186) earlier this year so it was pretty fresh in my mind.

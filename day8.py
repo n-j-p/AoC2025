@@ -77,11 +77,46 @@ def part1(data, max_connections=10):
     c = Counter()
 
     c.update([z.get_root(x) for x in range(len(data)+1)][1:])
+    from functools import reduce
+    return reduce(lambda x,y: x*y, sorted(c.values())[-3:])
 
-    return sorted(c.values())[-3:]
+def finished(uf_struct):
+    seen_zero = False
+    for x in uf_struct.dad[1:]:
+        if x == 0:
+            if seen_zero:
+                return False
+            seen_zero = True
+    return True
+def part2(data):
+    T = [[int(x) for x in y.split(',')] for y in data]
 
+    # print(T)
+
+    all_distances = []
+    i = 1
+    for j,k in tqdm.tqdm(it.combinations(range(len(T)),2), total=len(T)*(len(T)-1)//2):
+        x = T[j]
+        y = T[k]
+        # print(i,x,y)
+        all_distances.append((D2(x,y), j, k, x, y))
+        i += 1
+    all_distances=sorted(all_distances)
+    # return all_distances
+
+    uf = UnionFind(len(T)+1)
+    for i in tqdm.tqdm(range(len(all_distances))):
+        j,k = all_distances[i][1]+1, all_distances[i][2]+1
+        x,y = all_distances[i][3], all_distances[i][4]
+        if finished(uf):
+            break
+        uf.union(j,k)
+        # print(uf.dad)
+        last = (x,y)
+    return last[0][0]*last[1][0]
 if __name__ == '__main__':
     actual_input = open('c:/temp/day8_input.txt', 'r').read().split('\n')[:-1]
     sample_input = open('./day8_sample_input.txt', 'r').read().split('\n')[:-1]
 
-    print(part1(sample_input, 10))
+    print(f'Part 1 answer is {part1(actual_input, 1000)}')
+    print(f'Part 2 answer is {part2(actual_input)}')
