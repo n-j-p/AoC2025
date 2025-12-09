@@ -1,3 +1,4 @@
+import pdb
 def D1(x,y):
     return abs(x[0]-y[0]) + abs(x[1]-y[1])
 def A(x,y):
@@ -198,11 +199,11 @@ Is the empty square we first reach interior or exterior?
 
 # Let's start by designating corner types:
 
-def classify2(data):
+def classify2(data,start_type='e'):
     pts = [(int(x[0]), int(x[1])) for x in [y.split(",") for y in data]]
     z = classify_pts(data)
     corner_types = {}
-    corner_types[pts[0]] = 'e' # assume to begin with
+    corner_types[pts[0]] = start_type # assume to begin with
     for c1, c2 in it.pairwise(pts + [pts[0],]):
         print(c1,c2)
         if c1[0] == c2[0]: # line connecting these corners is vertical
@@ -259,6 +260,12 @@ square in which case we can check. What about:
    ||
    ..
 
+In this case, leaving the corner, we know that if the wall wasn't there it
+would be exterior, so crossing it puts us in the interior. Or, consider 
+that we start on a vertical wall, which counts for the odd/even calculation as
+above. So, when we start tracing the line, start with vertical_wall_count
+equal to one. (Counter reset once we leave a series of consecutive walls).
+
 '''
 
 def trace_from_corner(p, q):
@@ -289,8 +296,325 @@ Here we generate the two lines radiating from p
         for y in range(py-1, qy-1, -1):
             yield ('v', px, y)
 
+def Rok2(p,q, pt_class_dict):
+
+    trace_gen = trace_from_corner(p, q)
+    typ, x, y = next(trace_gen)
+    # Start with the horizontal trace:
+    perpendicular_wall_count = 1 # see above, just incase the first 
+    if typ == 'v':
+        raise Exception('No horizontal trace') # deal with this later...
+    if ((x,y) not in pt_class_dict) and True: # first square is empty
+        pass
+    while typ == 'h':
+        
+
+        # next:
+        typ, x, y = next(trace_gen)
+        # square is a vertical wall
+    print('now process vertical trace')
+
+class Curve():
+    def __init__(self, data, start_type='e'):
+        z, _, corner_types = classify2(data, start_type=start_type)
+        self.corner_types = corner_types
+        self.curve_pts = z
+        
+    def Rok(self, p, q):
+        trace_gen = trace_from_corner(p, q)
+        # Start with the horizontal trace:
+        # We always start on a corner:
+        cur_loc = p
+        cur_type = 'c'
+        perpendicular_wall_count = 1 # see above, just incase the next square
+                                     # is a perp. wall
+        for trace_direction, x, y in trace_gen:
 
 
+            if trace_direction == 'v':
+                break
+
+            nxt_loc = (x,y)
+            try:
+                nxt_type = self.curve_pts[nxt_loc]
+            except KeyError: # empty square:
+                nxt_type = '.'
+            # Horizontal trace:
+            #       next
+            # last \ c  v   h   .
+            # -------------------
+            #   c  | OK X1  OK  X4
+            #   v  | OK X2  N/A X5
+            #   h  | OK N/A OK  N/A
+            #   .  | OK X2  N/A OK
+            # OK entries: do nothing
+            # N/A entries: shouldn't happen (check!)
+            # X1 c -> v, ok for now, but wall_count = 2 (??)
+            # X2 v,. -> v, increment wall count
+            # X4 c -> ., check if corner is internal/external, possibly reject
+            # X5 v -> ., check wall_count, possibly reject 
+            #    . -> ., should be OK as we should always be internal if we just left .
+            if nxt_type == 'c':
+                # It is always OK to be on a corner, reset wall count:
+                perpendicular_wall_count = 0
+            elif nxt_type == 'h':
+                if cur_type == 'v' or cur_type == '.':
+                    raise NotImplementedError("Shouldn't happen...")
+                # Otherwise, OK to slide along horizontal wall
+                perpendicular_wall_count = 0
+            elif nxt_type == '.':
+                if cur_type == 'h':
+                    raise NotImplementedError("Shouldn't happen...")
+                elif cur_type == '.':
+                    pass
+                    # moving from . to . should always be OK because we should
+                    # be in an interior square if we haven't quit yet...
+                elif cur_type == 'c':
+                    if self.corner_types[cur_loc] == 'e':
+                        # We moved from a corner to an exterior point
+                        return False
+                    else:
+                        # now we are in an interior point
+                        perpendicular_wall_count = 0
+                elif cur_type == 'v':
+                    if perpendicular_wall_count % 2 == 1:
+                        # import pdb
+                        # pdb.set_trace()
+                        # After a sequence of vertical walls we are outside
+                        return False
+                    else:
+                        # o.w. we are on the inside 
+                        perpendicular_wall_count = 0
+            elif nxt_type == 'v':
+                if cur_type in ['c','.']:
+                    perpendicular_wall_count = 1
+                elif cur_type == 'v':
+                    perpendicular_wall_count += 1
+                elif cur_type == 'h':
+                    raise NotImplementedError("Shouldn't happen")
+                else:
+                    raise Exception("Unknown")
+            cur_loc = nxt_loc
+            cur_type = nxt_type
+                
+        # print('now process vertical trace')
+        # If there is no vertical, we are done:
+        if trace_direction == 'h':
+            return True
+        
+        # Reset back to p:
+        cur_loc = p
+        cur_type = 'c'
+        nxt_loc = (x,y)
+        while True:
+            try:
+                nxt_type = self.curve_pts[nxt_loc]
+            except KeyError: # empty square:
+                nxt_type = '.'
+            # Vertical trace:
+            # is similar to horizontal trace but we swap v and h:
+            #       next
+            # last \ c  v   h   .
+            # -------------------
+            #   c  | OK OK  X1  X4
+            #   v  | OK OK  N/A N/A
+            #   h  | OK N/A X2  X5
+            #   .  | OK N/A X2  OK
+            # OK entries: do nothing
+            # N/A entries: shouldn't happen (check!)
+            # X1 c -> h, ok for now, but wall_count = 2 (??)
+            # X2 h,. -> h, increment wall count
+            # X4 c -> ., check if corner is internal/external, possibly reject
+            # X5 h -> ., check wall_count, possibly reject 
+            #    . -> ., should be OK as we should always be internal if we just left .
+            if nxt_type == 'c':
+                # It is always OK to be on a corner, reset wall count:
+                perpendicular_wall_count = 0
+            elif nxt_type == 'v':
+                if cur_type == 'h' or cur_type == '.':
+                    raise NotImplementedError("Shouldn't happen...")
+                # Otherwise, OK to slide along vertical wall
+                perpendicular_wall_count = 0
+            elif nxt_type == '.':
+                if cur_type == 'v':
+                    raise NotImplementedError("Shouldn't happen...")
+                elif cur_type == '.':
+                    pass
+                    # moving from . to . should always be OK because we should
+                    # be in an interior square if we haven't quit yet...
+                elif cur_type == 'c':
+                    if self.corner_types[cur_loc] == 'e':
+                        # We moved from a corner to an exterior point
+                        return False
+                    else:
+                        # now we are in an interior point
+                        perpendicular_wall_count = 0
+                elif cur_type == 'h':
+                    # import pdb
+                    # pdb.set_trace()
+                    if perpendicular_wall_count % 2 == 1:
+                        # import pdb
+                        # pdb.set_trace()
+                        # After a sequence of horizontal walls we are outside
+                        return False
+                    else:
+                        # o.w. we are on the inside 
+                        perpendicular_wall_count = 0
+            elif nxt_type == 'h':
+                if cur_type in ['c','.']:
+                    perpendicular_wall_count = 1
+                elif cur_type == 'h':
+                    perpendicular_wall_count += 1
+                elif cur_type == 'v':
+                    raise NotImplementedError("Shouldn't happen")
+                else:
+                    raise Exception("Unknown")
+            try:
+                _,x,y = next(trace_gen)
+            except StopIteration:
+                # Done! Success!
+                return True
+            cur_loc = nxt_loc
+            cur_type = nxt_type
+            nxt_loc = (x,y)
+
+            # if y in [48719, 50049]:
+            #     import pdb
+            #     pdb.set_trace()
+            #     pass
 
 
+    #         try:
+    #             next_square = self.curve_pts[(x,y)]
+    #             if next_square == 'v':
+    #                 perpendicular_wall_count += 1
+    #             elif next_square == 'c':
+    #                 on_corner = True
+    #             elif next_square == 'h':
+    #                 # OK to slide along horizontal wall...
+    #                 on_corner = False
+    #                 on_vert = False
+    #                 perpendicular_wall_count = 0
+                    
+    #             else:
+    #                 raise NotImplementedError
+    #         except KeyError: # (x,y) is an empty square
+    #             if on_corner:
+    #                 if self.corner_types[last_xy] == 'e':
+    #                     # We have moved from an exterior corner to
+    #                     # an empty square, which means we left the curve.
+    #                     return False
+    #                 else:
+    #                     # Now we are in an empty, interior square
+    #                     on_corner = False
+    #                     on_vert = False
+    #             elif on_vert:
+    #                 import pdb
+    #                 pdb.set_trace()
+    #                 if perpendicular_wall_count % 2 == 1:
+    #                     # Should be here if we have crossed vertical
+    #                     # walls into an exterior space
+    #                     return False
+    #                 else:
+    #                     perpendicular_wall_count = 0
+    #                     on_vert = False
+    #                     on_corner = Flase
 
+    #             else:    
+    #                 raise ValueError('unknown')
+        
+
+    #         # next:
+    #         last_xy = (x,y)
+    #         last_square = next_square
+    #         next_square, x, y = next(trace_gen)
+    #         # square is a vertical wall
+    # def Rok(self, p, q):
+    #     trace_gen = trace_from_corner(p, q)
+    #     trace_direction, x, y = next(trace_gen)
+    #     # Start with the horizontal trace:
+    #     perpendicular_wall_count = 1 # see above, just incase the first 
+    #     last_square = 'c'
+    #     on_corner = True
+    #     on_vert = False
+    #     if trace_direction == 'v':
+    #         raise Exception('No horizontal trace') # deal with this later...
+    #     while trace_direction == 'h':
+    #         try:
+    #             next_square = self.curve_pts[(x,y)]
+    #             if next_square == 'v':
+    #                 perpendicular_wall_count += 1
+    #             elif next_square == 'c':
+    #                 on_corner = True
+    #             elif next_square == 'h':
+    #                 # OK to slide along horizontal wall...
+    #                 on_corner = False
+    #                 on_vert = False
+    #                 perpendicular_wall_count = 0
+                    
+    #             else:
+    #                 raise NotImplementedError
+    #         except KeyError: # (x,y) is an empty square
+    #             if on_corner:
+    #                 if self.corner_types[last_xy] == 'e':
+    #                     # We have moved from an exterior corner to
+    #                     # an empty square, which means we left the curve.
+    #                     return False
+    #                 else:
+    #                     # Now we are in an empty, interior square
+    #                     on_corner = False
+    #                     on_vert = False
+    #             elif on_vert:
+    #                 import pdb
+    #                 pdb.set_trace()
+    #                 if perpendicular_wall_count % 2 == 1:
+    #                     # Should be here if we have crossed vertical
+    #                     # walls into an exterior space
+    #                     return False
+    #                 else:
+    #                     perpendicular_wall_count = 0
+    #                     on_vert = False
+    #                     on_corner = Flase
+
+    #             else:    
+    #                 raise ValueError('unknown')
+        
+
+    #         # next:
+    #         last_xy = (x,y)
+    #         last_square = next_square
+    #         next_square, x, y = next(trace_gen)
+    #         # square is a vertical wall
+    #     print('now process vertical trace')
+
+def part2_new(data):
+    c = Curve(data)
+    corners = list(c.corner_types.keys())
+    # corners += [corners[0],]
+
+    print()
+    for p,q in it.combinations(corners,2):
+        ok = c.Rok(p,q) and c.Rok(q,p)
+        if ok:
+            print(p,q, ok, A(p,q))
+        else:
+            print(p,q,ok)
+
+def part2_actual(data, min_size=2e9):
+    c = Curve(data, start_type='i')
+    pts = list(c.corner_types.keys())
+
+    allcombos = []
+    for x,y in tqdm.tqdm(it.combinations(pts, 2), total = len(pts)*(len(pts)-1)//2):
+        allcombos.append((A(x,y), x, y))
+    srt_allcombos = sorted(allcombos)[::-1]
+    for A_, p, q in tqdm.tqdm(srt_allcombos):
+        if A_ > min_size:
+            continue
+        # px,py = p
+        # qx,qy = q
+        # if (px > 1723 and px <= 94523)
+        if c.Rok(p,q) and c.Rok(q,p):
+            print(p,q)
+            return A_
+    # return srt_allcombos

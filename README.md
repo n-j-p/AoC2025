@@ -33,3 +33,5 @@ Day 7: Of course, enumeration is better than generation.
 
 Day 8: Without the correct data structure this one would be impossible. Either
 you know it or you don't. I solved [a similar problem](https://projecteuler.net/problem=186) earlier this year so it was pretty fresh in my mind.
+
+Day 9, part 2: OK that one was hard. Horrible hack put together to solve it.
