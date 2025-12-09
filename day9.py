@@ -124,7 +124,8 @@ Now we can trace each line and the rectangle is OK (entirely on red or
 green squares) so long as no part of the line lies in the exterior of the
 defined close curve.
 
-Wlog let's consider a horizontal line. 
+Wlog let's consider a horizontal line (can flip to vertical just by changing
+a few things).
 
 We hit an exterior point if: 
 
@@ -296,24 +297,6 @@ Here we generate the two lines radiating from p
         for y in range(py-1, qy-1, -1):
             yield ('v', px, y)
 
-def Rok2(p,q, pt_class_dict):
-
-    trace_gen = trace_from_corner(p, q)
-    typ, x, y = next(trace_gen)
-    # Start with the horizontal trace:
-    perpendicular_wall_count = 1 # see above, just incase the first 
-    if typ == 'v':
-        raise Exception('No horizontal trace') # deal with this later...
-    if ((x,y) not in pt_class_dict) and True: # first square is empty
-        pass
-    while typ == 'h':
-        
-
-        # next:
-        typ, x, y = next(trace_gen)
-        # square is a vertical wall
-    print('now process vertical trace')
-
 class Curve():
     def __init__(self, data, start_type='e'):
         z, _, corner_types = classify2(data, start_type=start_type)
@@ -484,108 +467,6 @@ class Curve():
             #     pass
 
 
-    #         try:
-    #             next_square = self.curve_pts[(x,y)]
-    #             if next_square == 'v':
-    #                 perpendicular_wall_count += 1
-    #             elif next_square == 'c':
-    #                 on_corner = True
-    #             elif next_square == 'h':
-    #                 # OK to slide along horizontal wall...
-    #                 on_corner = False
-    #                 on_vert = False
-    #                 perpendicular_wall_count = 0
-                    
-    #             else:
-    #                 raise NotImplementedError
-    #         except KeyError: # (x,y) is an empty square
-    #             if on_corner:
-    #                 if self.corner_types[last_xy] == 'e':
-    #                     # We have moved from an exterior corner to
-    #                     # an empty square, which means we left the curve.
-    #                     return False
-    #                 else:
-    #                     # Now we are in an empty, interior square
-    #                     on_corner = False
-    #                     on_vert = False
-    #             elif on_vert:
-    #                 import pdb
-    #                 pdb.set_trace()
-    #                 if perpendicular_wall_count % 2 == 1:
-    #                     # Should be here if we have crossed vertical
-    #                     # walls into an exterior space
-    #                     return False
-    #                 else:
-    #                     perpendicular_wall_count = 0
-    #                     on_vert = False
-    #                     on_corner = Flase
-
-    #             else:    
-    #                 raise ValueError('unknown')
-        
-
-    #         # next:
-    #         last_xy = (x,y)
-    #         last_square = next_square
-    #         next_square, x, y = next(trace_gen)
-    #         # square is a vertical wall
-    # def Rok(self, p, q):
-    #     trace_gen = trace_from_corner(p, q)
-    #     trace_direction, x, y = next(trace_gen)
-    #     # Start with the horizontal trace:
-    #     perpendicular_wall_count = 1 # see above, just incase the first 
-    #     last_square = 'c'
-    #     on_corner = True
-    #     on_vert = False
-    #     if trace_direction == 'v':
-    #         raise Exception('No horizontal trace') # deal with this later...
-    #     while trace_direction == 'h':
-    #         try:
-    #             next_square = self.curve_pts[(x,y)]
-    #             if next_square == 'v':
-    #                 perpendicular_wall_count += 1
-    #             elif next_square == 'c':
-    #                 on_corner = True
-    #             elif next_square == 'h':
-    #                 # OK to slide along horizontal wall...
-    #                 on_corner = False
-    #                 on_vert = False
-    #                 perpendicular_wall_count = 0
-                    
-    #             else:
-    #                 raise NotImplementedError
-    #         except KeyError: # (x,y) is an empty square
-    #             if on_corner:
-    #                 if self.corner_types[last_xy] == 'e':
-    #                     # We have moved from an exterior corner to
-    #                     # an empty square, which means we left the curve.
-    #                     return False
-    #                 else:
-    #                     # Now we are in an empty, interior square
-    #                     on_corner = False
-    #                     on_vert = False
-    #             elif on_vert:
-    #                 import pdb
-    #                 pdb.set_trace()
-    #                 if perpendicular_wall_count % 2 == 1:
-    #                     # Should be here if we have crossed vertical
-    #                     # walls into an exterior space
-    #                     return False
-    #                 else:
-    #                     perpendicular_wall_count = 0
-    #                     on_vert = False
-    #                     on_corner = Flase
-
-    #             else:    
-    #                 raise ValueError('unknown')
-        
-
-    #         # next:
-    #         last_xy = (x,y)
-    #         last_square = next_square
-    #         next_square, x, y = next(trace_gen)
-    #         # square is a vertical wall
-    #     print('now process vertical trace')
 
 def part2_new(data):
     c = Curve(data)
