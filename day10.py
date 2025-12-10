@@ -244,9 +244,102 @@ However, for large enough values of the free variables, the joltage solution
 will require negative button presses for (some of) the nonfree variables.
 
 For one free variable we can just search through it.count(0)
+'''
 
+def _feasible1(A, nonfree):
+    nfree = A.shape[1]-1 - len(nonfree)
+    assert nfree == 1
+
+    # Remove any zero rows from A:
+    Ac = np.array(A).copy()
+    for _ in range(len(Ac)):
+        if sum(abs(Ac[-1,:])) == 0:
+            Ac = Ac[:-1,:]
+    print(A)
+    print(Ac)
+
+    free_vars = sorted(set(range(A.shape[1]-1)).difference(nonfree))
+
+    B = np.hstack([Ac[:,[A.shape[1]-1]], 
+                   -Ac[:,free_vars]])
+
+    # Assume that the nonfree variable equations contain some negative
+    # coefficients (relatd to the free variables), otherwise the search
+    # space is infinite...
+    assert np.min(B) < 0 
+
+    return Ac, free_vars, B
+
+
+r'''
+
+for sample_data[2] we get:
+
+array([[6, -1],
+        [-1, 1],
+        [5, 0]], dtype=object))
+which corresponds to:
+
+A = 6 - D
+B = -1 + D
+C = 5
+D free
+
+here A >= 0 means 6 - D >= 0 or D <= 6
+and  B >= 0 means -1 + D >= 0 or D >= 1
+
+so feasible range for D is [1,6]
 
 '''
+def feasible1(A, nonfree):
+    nfree = A.shape[1]-1 - len(nonfree)
+    assert nfree == 1
+
+    # Remove any zero rows from A:
+    Ac = np.array(A).copy()
+    for _ in range(len(Ac)):
+        if sum(abs(Ac[-1,:])) == 0:
+            Ac = Ac[:-1,:]
+    # print(A)
+    # print(Ac)
+
+    free_vars = sorted(set(range(A.shape[1]-1)).difference(nonfree))
+
+    B = np.hstack([Ac[:,[A.shape[1]-1]], 
+                   -Ac[:,free_vars]])
+
+    # Assume that the nonfree variable equations contain some negative
+    # coefficients (relatd to the free variables), otherwise the search
+    # space is infinite...
+    assert np.min(B) < 0 
+
+    mins = []
+    maxes = []
+    for r in B:
+        if r[1] == 0:
+            # This doesn't correspond to a constraint on F
+            continue
+        elif r[1] < 0:
+            maxes.append(-r[0] / r[1])
+        else:
+            mins.append(-r[0] / r[1])
+    if len(mins) == 0:
+        return 0, min(maxes)
+    else:
+        return max(0,max(mins)), min(maxes)
+
+def get_all_feasible(data):
+    for i, row in enumerate(data):
+        A, nonfree = reduce_to_echelon(row)
+        free = A.shape[1]-1 - len(nonfree)
+        if free == 1:
+            print(f'row {i+1}, {feasible1(A,nonfree)}')
+        else:
+            print(f'row {i+1}, {free} free variables')
+    # row = 1
+    # try:    
+    #     print(row, feasible1(*reduce_to_echelon(data[i-1])))
+    # except 
 
 # def solveit(reduced_augmented_matrix):
 #     ram = reduced_augmented_matrix
