@@ -99,7 +99,7 @@ if __name__ == '__main__':
     print(sample_input)
     print(part1(sample_input))
 
-    actual_input = open('./day9_input.txt', 'r').read().split('\n')[:-1]
+    actual_input = open('c:/temp/day9_input.txt', 'r').read().split('\n')[:-1]
     pts = [(int(x[0]), int(x[1])) for x in [y.split(",") for y in actual_input]]
     print(actual_input)
     print(part1(actual_input))
