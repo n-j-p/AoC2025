@@ -324,9 +324,9 @@ def feasible1(A, nonfree):
         else:
             mins.append(-r[0] / r[1])
     if len(mins) == 0:
-        return 0, min(maxes)
+        return 0, min(maxes), B
     else:
-        return max(0,max(mins)), min(maxes)
+        return max(0,max(mins)), min(maxes), B
 
 def get_all_feasible(data):
     for i, row in enumerate(data):
@@ -336,39 +336,29 @@ def get_all_feasible(data):
             print(f'row {i+1}, {feasible1(A,nonfree)}')
         else:
             print(f'row {i+1}, {free} free variables')
-    # row = 1
-    # try:    
-    #     print(row, feasible1(*reduce_to_echelon(data[i-1])))
-    # except 
 
-# def solveit(reduced_augmented_matrix):
-#     ram = reduced_augmented_matrix
+def isint(x):
+    return abs(int(x) - x) <= 1e-12
+def allints(L):
+    for x in L:
+        if not isint(x):
+            return False
+    return True
+import math
+def solve_part2(row, VERBOSE=False):
+    A, nonfree = reduce_to_echelon(row)
+    free = A.shape[1]-1 - len(nonfree)
+    if free == 1:
+        min_presses = 1e12
+        mn, mx, B = feasible1(A,nonfree)
+        for F in range(math.ceil(mn), math.floor(mx)+1):
+            nonfrees = np.dot(B, [1,F])
+            if allints(nonfrees):
+                if VERBOSE: print(F, nonfrees, sum(nonfrees) + F)
+                min_presses = min(min_presses, sum(nonfrees) + F)
+        return min_presses
+    elif free == 0:
+        return np.sum(A[:,-1])
+    else:
+        print(f'{free} free varibles')
 
-#     # Check that free variable coefficients are negative:
-#     assert np.min(ram[:,:-1]) < 0
-
-#     M,N = ram.shape
-#     free_vars = list(range(N-1))
-
-#     for r in range(M):
-#         rint = [int(x) for x in ram[r]]
-#         print(free_vars, rint)
-#         free_vars.remove(rint.index(1))
-
-#     nonfree_A = np.hstack([ex[:,[N-1]],-ex[:,[3,5]]])
-    
-#     return free_vars, nonfree_A
-
-# def solveit2(nfA):
-#     assert nfA.shape[1] == 3
-#     for D in range(10):
-#         for F in range(10):
-#             print(D,F, np.dot(nfA, [1,D,F]))
-#             if np.min(np.dot(nfA, [1,D,F])) >= 0:
-#                 yield (D,F)
-
-
-# ex = np.array([[1, 0, 0, 1, 0, -1, 2],
-#                [0, 1, 0, 0, 0, 1, 5],
-#                [0, 0, 1, 1, 0, -1, 1],
-#                [0, 0, 0, 0, 1, 1, 3]])
