@@ -48,9 +48,6 @@ def part1(data):
         c += cr
     return c
 
-if __name__ == '__main__':
-    for row in sample_data:
-        print(parse(row))
 
 r'''
 
@@ -309,7 +306,7 @@ def feasible1(A, nonfree):
                    -Ac[:,free_vars]])
 
     # Assume that the nonfree variable equations contain some negative
-    # coefficients (relatd to the free variables), otherwise the search
+    # coefficients (related to the free variables), otherwise the search
     # space is infinite...
     assert np.min(B) < 0 
 
@@ -331,11 +328,15 @@ def feasible1(A, nonfree):
 def get_all_feasible(data):
     for i, row in enumerate(data):
         A, nonfree = reduce_to_echelon(row)
-        free = A.shape[1]-1 - len(nonfree)
-        if free == 1:
+        nfree = A.shape[1]-1 - len(nonfree)
+        free_vars = sorted(set(range(A.shape[1]-1)).difference(nonfree))
+        if nfree == 1:
             print(f'row {i+1}, {feasible1(A,nonfree)}')
         else:
-            print(f'row {i+1}, {free} free variables')
+            for free_var in free_vars:
+                feasible1(A[:, sorted(nonfree + (free_var,A.shape[1]-1))], nonfree)
+            print(f'row {i+1}, {nfree} free variables')
+
 
 def isint(x):
     return abs(int(x) - x) <= 1e-12
@@ -345,9 +346,12 @@ def allints(L):
             return False
     return True
 import math
+import pdb
+r_ex = '[....#.#] (1,3,4,5) (0,3,5,6) (0,3,4,5,6) (2,3,4,5) (2,3,4,5,6) (0,1,2,6) (2,6) (0,1,2,4) {49,54,81,68,79,68,62}'
 def solve_part2(row, VERBOSE=False):
     A, nonfree = reduce_to_echelon(row)
-    free = A.shape[1]-1 - len(nonfree)
+    problem_specs = parse(row)
+    free = len(problem_specs.buttons) - len(nonfree)
     if free == 1:
         min_presses = 1e12
         mn, mx, B = feasible1(A,nonfree)
@@ -360,5 +364,59 @@ def solve_part2(row, VERBOSE=False):
     elif free == 0:
         return np.sum(A[:,-1])
     else:
-        print(f'{free} free varibles')
+        min_presses = 1e12
+        if VERBOSE: print(f'{free} free varibles')
+        free_vars = sorted(set(range(len(problem_specs.buttons))).difference(nonfree))
 
+        free_variable_ranges = [(1,)] # intercept (constant coefficient) term in matrix equation below
+        # Rather than solve the entire linear inequality problem, which we 
+        # could in theory do with something
+        # like Fourier–Motzkin algorithm, let's just get the maximum number
+        # of button presses that makes one of the joltages to ohigh.
+
+        for free_var in free_vars:
+            free_variable_ranges.append(range(0,min([problem_specs.joltage[i] for i,x in enumerate(problem_specs.buttons[free_var]) if x])+1))
+
+        reconstruction_matrix = np.hstack([A[:,-1], -A[:,free_vars]])
+        while np.abs(reconstruction_matrix[-1,:]).sum() == 0:
+            reconstruction_matrix = reconstruction_matrix[:-1,:]
+        for b in it.product(*free_variable_ranges):
+            # Now calculate the non-free variables from the quasi-feasible range
+            # for the free variables:
+            nonfrees = np.dot(reconstruction_matrix, b)
+            if min(nonfrees) >= 0:
+                if VERBOSE: print(b, 'OK', end=': ')
+
+                # Reconstruct all variables (free & non-free) in correct order:
+                allvars = np.zeros((len(problem_specs.buttons),),dtype=int)
+                allvars[list(nonfree)] = nonfrees
+                allvars[list(free_vars)] = b[1:]
+
+                if allints(allvars):
+                    try:
+                        assert tuple(np.dot(allvars, np.array(problem_specs.buttons))) == problem_specs.joltage
+                    except AssertionError:
+                        # I don't know what happened here... valid values of allvars should produce the correct voltage ??!?!
+                        #print('unknown')
+                        continue
+                    if VERBOSE: print(allvars, np.dot(allvars, np.array(problem_specs.buttons)))
+
+                    min_presses = min(min_presses, sum(allvars))
+                    pass
+                else:
+                    if VERBOSE: print(allvars, 'non-integral')
+
+            else:
+                if VERBOSE: print(b, nonfrees, 'negative non-free variables')
+        return min_presses
+
+
+def new_part2(data):
+    c = 0
+    for r in tqdm.tqdm(data):
+        c += solve_part2(r)
+    # return sum([solve_part2(r) for r in data])
+    return c
+r_ex2 = "[#.#.......] (0,2) (0,2,3,4,9) (2,3,5,6,8,9) (0,1,4,7,9) (2,5,6) (2,3,4,5,6) (2,5,8) (1,2,4,7,9) (0,2,3,4,7,9) (1,3,4,6,7,8,9) (0,1,3,4,6,8,9) (2,5,6,7,8) (0,3,4,5,7,8) {183,41,213,178,190,58,54,160,57,186}"
+if __name__ == '__main__':
+    assert new_part2(sample_data) == 33
