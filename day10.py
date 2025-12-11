@@ -1,7 +1,15 @@
+import tqdm
+import itertools as it
+import numpy as np
+import math
+import pdb
+from collections import namedtuple
+
 sample_data = open('day10_sample_input.txt').read().split('\n')[:-1]
 actual_data = open('c:/temp/day10_input.txt').read().split('\n')[:-1]
-from collections import namedtuple
+
 Problem = namedtuple("Problem", ['nlights', 'on', 'buttons','joltage'])
+
 def parse(row):
     rowsp = row.split(' ')
     # print(rowsp)
@@ -15,8 +23,6 @@ def parse(row):
                    [i-1 for i,x in enumerate(rowsp[0]) if x == '#'],
                    button_rows, 
                    joltage)
-import itertools as it
-import numpy as np
 def satBF(problem):
     button_matrix = np.array(problem.buttons)
     for row_indicator in it.product([0,1], repeat = button_matrix.shape[0]):
@@ -36,7 +42,7 @@ def satBF(problem):
             # print('-----------------')
             # print(rows_on)
             yield(rows_on)
-import tqdm
+
 def part1(data):
     c = 0
     for row in tqdm.tqdm(data):
@@ -96,7 +102,8 @@ Or transposed:
                     [1]
                     [2]
 
-RR:
+Write this as an augmented matrix, and let's row-reduce it:
+
 0 0 0 0 1 1 | 3
 0 1 0 0 0 1 | 5
 0 0 1 1 1 0 | 4
@@ -149,50 +156,9 @@ soln3 = [2,4,1,1,2,1]
 are both solutions.
 
 However both of these require 11 button presses.
-
-Now, given a set of equations with free variables, e.g.:
-
-
-A + D - F = 2
-B + F = 5
-C + D - F = 1
-E + F = 3
-
-(or equivalent augmented, reduced matrix):
-
-1 0 0 1 0 -1 | 2
-0 1 0 0 0  1 | 5
-0 0 1 1 0 -1 | 1
-0 0 0 0 1  1 | 3
-
-valid solutions are for non-negative free variables. If there are no negative
-coefficients, any solution is valid but we should take free variables all 
-equal to zero.
-
-Total button presses are equal to
-
-
-----
-A + D - F = 2
-B + F = 5
-C + D - F = 1
-E + F = 3
-----
-
-A = 2 - D + F
-B = 5 - F
-C = 1 - D + F
-E = 3 - F
-
-so f(D,F) = 11 - D + F
-subject to D, F >= 0
-also B >= 0 or 5 - F >= 0, F <= 5
-C >= 0 or 1 - D + F >= 0, 
-
-
 --------------
 
-We can do the first step (Gaussian reduction to echelon form using sympy)
+We can do the this (Gaussian reduction to echelon form) using sympy
 
 '''
 
@@ -325,17 +291,6 @@ def feasible1(A, nonfree):
     else:
         return max(0,max(mins)), min(maxes), B
 
-def get_all_feasible(data):
-    for i, row in enumerate(data):
-        A, nonfree = reduce_to_echelon(row)
-        nfree = A.shape[1]-1 - len(nonfree)
-        free_vars = sorted(set(range(A.shape[1]-1)).difference(nonfree))
-        if nfree == 1:
-            print(f'row {i+1}, {feasible1(A,nonfree)}')
-        else:
-            for free_var in free_vars:
-                feasible1(A[:, sorted(nonfree + (free_var,A.shape[1]-1))], nonfree)
-            print(f'row {i+1}, {nfree} free variables')
 
 
 def isint(x):
@@ -345,14 +300,13 @@ def allints(L):
         if not isint(x):
             return False
     return True
-import math
-import pdb
-r_ex = '[....#.#] (1,3,4,5) (0,3,5,6) (0,3,4,5,6) (2,3,4,5) (2,3,4,5,6) (0,1,2,6) (2,6) (0,1,2,4) {49,54,81,68,79,68,62}'
+
 def solve_part2(row, VERBOSE=False):
     A, nonfree = reduce_to_echelon(row)
     problem_specs = parse(row)
     free = len(problem_specs.buttons) - len(nonfree)
     if free == 1:
+        # This should be able to be calculated with the general method below
         min_presses = 1e12
         mn, mx, B = feasible1(A,nonfree)
         for F in range(math.ceil(mn), math.floor(mx)+1):
@@ -363,7 +317,7 @@ def solve_part2(row, VERBOSE=False):
         return min_presses
     elif free == 0:
         return np.sum(A[:,-1])
-    else:
+    else: # general method, number of free variables > 1 (probably usable for 1 as well)
         min_presses = 1e12
         if VERBOSE: print(f'{free} free varibles')
         free_vars = sorted(set(range(len(problem_specs.buttons))).difference(nonfree))
@@ -372,14 +326,18 @@ def solve_part2(row, VERBOSE=False):
         # Rather than solve the entire linear inequality problem, which we 
         # could in theory do with something
         # like Fourier–Motzkin algorithm, let's just get the maximum number
-        # of button presses that makes one of the joltages to ohigh.
+        # of button presses that makes one of the joltages too high.
 
         for free_var in free_vars:
             free_variable_ranges.append(range(0,min([problem_specs.joltage[i] for i,x in enumerate(problem_specs.buttons[free_var]) if x])+1))
 
+        # We use this to get the nonfree variables from any number of free variables:
         reconstruction_matrix = np.hstack([A[:,-1], -A[:,free_vars]])
+        # Drop trailing zero rows:
         while np.abs(reconstruction_matrix[-1,:]).sum() == 0:
             reconstruction_matrix = reconstruction_matrix[:-1,:]
+
+
         for b in it.product(*free_variable_ranges):
             # Now calculate the non-free variables from the quasi-feasible range
             # for the free variables:
@@ -403,10 +361,10 @@ def solve_part2(row, VERBOSE=False):
 
                     min_presses = min(min_presses, sum(allvars))
                     pass
-                else:
+                else: # discard solutions involving non-integral button presses
                     if VERBOSE: print(allvars, 'non-integral')
 
-            else:
+            else: # discard solutions involving negative button presses
                 if VERBOSE: print(b, nonfrees, 'negative non-free variables')
         return min_presses
 
@@ -415,8 +373,7 @@ def new_part2(data):
     c = 0
     for r in tqdm.tqdm(data):
         c += solve_part2(r)
-    # return sum([solve_part2(r) for r in data])
     return c
-r_ex2 = "[#.#.......] (0,2) (0,2,3,4,9) (2,3,5,6,8,9) (0,1,4,7,9) (2,5,6) (2,3,4,5,6) (2,5,8) (1,2,4,7,9) (0,2,3,4,7,9) (1,3,4,6,7,8,9) (0,1,3,4,6,8,9) (2,5,6,7,8) (0,3,4,5,7,8) {183,41,213,178,190,58,54,160,57,186}"
+
 if __name__ == '__main__':
     assert new_part2(sample_data) == 33
