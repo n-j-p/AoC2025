@@ -68,3 +68,6 @@ So even though this was easier than day 9 and 10, it still took quite a bit
 of time to debug the tree traversal. Then we can enumerate svr->dac->fft->out, 
 which was zero, and svr->fft->dac-> out. The tree visualisations on reddit
 helped refine this idea. 
+
+And that's a wrap! Having just 12 days of AoC is probably better anyway as now 
+we can move onto something else in life.

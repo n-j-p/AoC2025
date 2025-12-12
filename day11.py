@@ -1,6 +1,4 @@
 import networkx
-import pdb
-import matplotlib.pyplot as plt
 import tqdm
 sample_data = open('day11_sample_input.txt', 'r').read().split('\n')[:-1]
 sample_data2 = open('day11_sample_input_part2.txt', 'r').read().split('\n')[:-1]
