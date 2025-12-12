@@ -61,3 +61,10 @@ add up to the required voltage but I'm not 100% sure why). Iterating across
 all valid button presses, we then calculate the minimum. To-do (unlikely
 that I'll ever get around to this, but): refine the feasible variable space
 with something like the Fourier–Motzkin algorithm.
+
+Day 11: Part 1 was achievable with a networkx.DiGraph, part 2 less so...
+I code up a DFS tree search algorithm approximately once a year, in December ;-)
+So even though this was easier than day 9 and 10, it still took quite a bit
+of time to debug the tree traversal. Then we can enumerate svr->dac->fft->out, 
+which was zero, and svr->fft->dac-> out. The tree visualisations on reddit
+helped refine this idea. 
